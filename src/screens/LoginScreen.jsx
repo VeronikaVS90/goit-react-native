@@ -43,16 +43,17 @@ const LoginScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={-150}
+      >
         <ImageBackground
           source={require("../images/bg-img.jpg")}
           resizeMode="cover"
           style={styles.imageBackground}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.loginContainer}
-          >
+          <View style={styles.loginContainer}>
             <View style={styles.titleContainer}>
               <Text style={styles.loginTitle}>Увійти</Text>
             </View>
@@ -110,9 +111,9 @@ const LoginScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-          </KeyboardAvoidingView>
+          </View>
         </ImageBackground>
-      </View>
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    color: "#BDBDBD",
+    color: "#000",
     backgroundColor: "#F6F6F6",
     borderWidth: 1,
     borderStyle: "solid",
@@ -170,13 +171,13 @@ const styles = StyleSheet.create({
   },
   showTextButton: {
     position: "absolute",
+    right: 16,
+    top: "100%",
+    transform: [{ translateY: -50 }],
   },
   showText: {
-    top: "50%",
-    right: 16,
-    lineHeight: 24,
     marginTop: 4,
-    marginLeft: 275,
+    lineHeight: 24,
     color: "#1B4371",
     fontSize: 16,
   },
