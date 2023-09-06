@@ -1,9 +1,9 @@
 import { useFonts } from "expo-font";
-import LoginScreen from "./src/Screens/LoginScreen";
-import RegistrationScreen from "./src/Screens/RegistrationScreen";
+import LoginScreen from "./src/screens/LoginScreen";
+import RegistrationScreen from "./src/screens/RegistrationScreen";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
-import Home from "./src/Screens/Home";
+import Home from "./src/screens/Home";
 
 const MainStack  = createStackNavigator();
 
