@@ -45,8 +45,7 @@ export default function RegistrationScreen({ navigation }) {
     <TouchableWithoutFeedback onPress={keyboardHide}>
       <View>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" && "padding"}
-          keyboardVerticalOffset={-120}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.container}>
             <Image
@@ -70,12 +69,11 @@ export default function RegistrationScreen({ navigation }) {
                   }
                   placeholder="Логін"
                   placeholderTextColor={"#BDBDBD"}
-                  style={{
-                    ...styles.input,
-                    borderColor: isLoginFocus ? "#ff6c00" : "#e8e8e8",
-                    backgroundColor: isLoginFocus ? "#fff" : "#f6f6f6",
-                    marginBottom: 10,
-                  }}
+                  style={[
+                    styles.input,
+                    styles.activeInput,
+                    isLoginFocus && styles.activeInputFocus,
+                  ]}
                   onFocus={() => {
                     setIsShowKeyboard(true);
                     setIsLoginFocus(true);
@@ -89,12 +87,11 @@ export default function RegistrationScreen({ navigation }) {
                   }
                   placeholder="Адреса електронної пошти"
                   placeholderTextColor={"#BDBDBD"}
-                  style={{
-                    ...styles.input,
-                    borderColor: isEmailFocus ? "#ff6c00" : "#e8e8e8",
-                    backgroundColor: isEmailFocus ? "#fff" : "#f6f6f6",
-                    marginBottom: 10,
-                  }}
+                  style={[
+                    styles.input,
+                    styles.activeInput,
+                    isEmailFocus && styles.activeInputFocus,
+                  ]}
                   onFocus={() => {
                     setIsShowKeyboard(true);
                     setIsEmailFocus(true);
@@ -113,11 +110,11 @@ export default function RegistrationScreen({ navigation }) {
                     placeholder="Пароль"
                     placeholderTextColor={"#BDBDBD"}
                     secureTextEntry={isPasswordHidden}
-                    style={{
-                      ...styles.input,
-                      borderColor: isPasswordFocus ? "#ff6c00" : "#e8e8e8",
-                      backgroundColor: isPasswordFocus ? "#fff" : "#f6f6f6",
-                    }}
+                    style={[
+                      styles.input,
+                      styles.activeInput,
+                      isPasswordFocus && styles.activeInputFocus,
+                    ]}
                     onFocus={() => {
                       setIsShowKeyboard(true);
                       setIsPasswordFocus(true);
@@ -224,6 +221,17 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto-Regular",
   },
 
+  activeInput: {
+    borderColor: "#e8e8e8",
+    backgroundColor: "#f6f6f6",
+    marginBottom: 10,
+  },
+
+  activeInputFocus: {
+    borderColor: "#ff6c00",
+    backgroundColor: "#fff",
+  },
+
   button: {
     height: 51,
     backgroundColor: "#FF6C00",
@@ -238,15 +246,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "400",
     lineHeight: 16,
-    fontFamily: "Roboto-Regular",
-  },
-
-  logInText: {
-    textAlign: "center",
-    color: "#1B4371",
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 19,
     fontFamily: "Roboto-Regular",
   },
 

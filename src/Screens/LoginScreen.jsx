@@ -43,8 +43,7 @@ export default function RegistrationScreen({ navigation }) {
     <TouchableWithoutFeedback onPress={keyboardHide}>
       <View>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" && "padding"}
-          keyboardVerticalOffset={-150}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.container}>
             <Image
@@ -63,19 +62,14 @@ export default function RegistrationScreen({ navigation }) {
                   }
                   placeholder="Адреса електронної пошти"
                   placeholderTextColor={"#BDBDBD"}
-                  style={{
-                    ...styles.input,
-                    borderColor: isEmailFocus ? "#ff6c00" : "#e8e8e8",
-                    backgroundColor: isEmailFocus ? "#fff" : "#f6f6f6",
-                    marginBottom: 10,
-                  }}
+                  style={styles.input}
                   onFocus={() => {
                     setIsShowKeyboard(true);
                     setIsEmailFocus(true);
                   }}
                   onBlur={() => setIsEmailFocus(false)}
                 />
-                <View style={{ position: "relative" }}>
+                <View style={styles.passwordInputContainer}>
                   <TextInput
                     value={state.password}
                     onChangeText={(value) =>
@@ -87,11 +81,7 @@ export default function RegistrationScreen({ navigation }) {
                     placeholder="Пароль"
                     placeholderTextColor={"#BDBDBD"}
                     secureTextEntry={isPasswordHidden}
-                    style={{
-                      ...styles.input,
-                      borderColor: isPasswordFocus ? "#ff6c00" : "#e8e8e8",
-                      backgroundColor: isPasswordFocus ? "#fff" : "#f6f6f6",
-                    }}
+                    style={styles.input}
                     onFocus={() => {
                       setIsShowKeyboard(true);
                       setIsPasswordFocus(true);
@@ -112,7 +102,7 @@ export default function RegistrationScreen({ navigation }) {
               </View>
 
               {!isShowKeyboard && (
-                <View>
+                <View style={styles.buttonWrap}>
                   <Pressable onPress={handleSubmit} style={styles.button}>
                     <Text style={styles.buttonText}>Увійти</Text>
                   </Pressable>
@@ -120,9 +110,7 @@ export default function RegistrationScreen({ navigation }) {
                     onPress={() => {
                       navigation.navigate("Register");
                     }}
-                    style={{
-                      marginBottom: 100,
-                    }}
+                    style={styles.registerLink}
                   >
                     <Text style={styles.logInLink}>
                       Немає акаунту? Зареєструватися
@@ -172,6 +160,10 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  passwordInputContainer: {
+    position: "relative",
+  },
+
   image: {
     position: "absolute",
     width: "100%",
@@ -184,6 +176,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     fontFamily: "Roboto-Regular",
+    borderColor: "#e8e8e8",
+    backgroundColor: "#f6f6f6",
+  },
+
+  buttonWrap: {
+    marginBottom: 100,
   },
 
   button: {
@@ -200,15 +198,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "400",
     lineHeight: 16,
-    fontFamily: "Roboto-Regular",
-  },
-
-  logInText: {
-    textAlign: "center",
-    color: "#1B4371",
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 19,
     fontFamily: "Roboto-Regular",
   },
 

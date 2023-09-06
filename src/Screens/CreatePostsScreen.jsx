@@ -31,7 +31,9 @@ export default function CreatePostsScreen() {
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={keyboardHide}>
         <View>
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" && "padding"}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
             {!isShowKeyboard && (
               <View>
                 <View style={styles.imageBackground}>
@@ -57,21 +59,21 @@ export default function CreatePostsScreen() {
                 setIsNameFocus(true);
               }}
               onBlur={() => setIsNameFocus(false)}
-              style={{
-                ...styles.input,
-                borderBottomColor: isNameFocus ? "#ff6c00" : "#e8e8e8",
-                marginTop: 30,
-              }}
+              style={[styles.input, isNameFocus && styles.activeInputFocus]}
             />
             <View>
               <Ionicons
                 name="ios-location-outline"
                 size={24}
                 color="#BDBDBD"
-                style={{
-                  ...styles.locationIcon,
-                  color: isLocationFocus ? "#ff6c00" : "#BDBDBD",
-                }}
+                style={[
+                  styles.locationIcon,
+                  {
+                    color: isLocationFocus
+                      ? styles.locationIconActive
+                      : styles.locationIconInactive,
+                  },
+                ]}
               />
               <TextInput
                 value={location}
@@ -83,16 +85,15 @@ export default function CreatePostsScreen() {
                   setIsLocationFocus(true);
                 }}
                 onBlur={() => setIsLocationFocus(false)}
-                style={{
-                  ...styles.input,
-                  borderBottomColor: isLocationFocus ? "#ff6c00" : "#e8e8e8",
-                  marginTop: 30,
-                  paddingLeft: 25,
-                }}
+                style={[
+                  styles.input,
+                  isLocationFocus && styles.activeInputFocus,
+                  styles.locationInput,
+                ]}
               />
             </View>
             <Pressable style={styles.button}>
-              <Text style={styles.buttonText}>Опубліковати</Text>
+              <Text style={styles.buttonText}>Опублікувати</Text>
             </Pressable>
             <View style={styles.trashIconWrap}>
               <Pressable style={styles.trashButton}>
@@ -142,10 +143,24 @@ const styles = StyleSheet.create({
     height: 35,
     borderBottomWidth: 1,
     borderBottomColor: "#E8E8E8",
+    marginTop: 30,
+    paddingLeft: 0,
+  },
+  locationInput: {
+    paddingLeft: 25,
+  },
+  activeInputFocus: {
+    borderBottomColor: "#ff6c00",
   },
   locationIcon: {
     position: "absolute",
     bottom: 7,
+  },
+  locationIconActive: {
+    color: "#ff6c00",
+  },
+  locationIconInactive: {
+    color: "#BDBDBD",
   },
   button: {
     width: "100%",
