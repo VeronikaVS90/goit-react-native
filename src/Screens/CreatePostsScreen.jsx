@@ -1,192 +1,203 @@
-import React, { useState } from "react";
 import {
-  Text,
-  StyleSheet,
   View,
-  TextInput,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
+import specimen from "../images/mountains.jpg";
+import { useState } from "react";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { TextInput } from "react-native-gesture-handler";
 
-export default function CreatePostsScreen() {
-  const [name, setName] = useState("");
+export const CreatePostsScreen = () => {
+  const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
+  const [photo, setPhoto] = useState(null);
 
-  const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-  const [isNameFocus, setIsNameFocus] = useState(false);
-  const [isLocationFocus, setIsLocationFocus] = useState(false);
-
-  const keyboardHide = () => {
-    setIsShowKeyboard(false);
-    Keyboard.dismiss();
+  const addPhoto = () => {
+    photo ? setPhoto(null) : setPhoto(specimen);
   };
-
   return (
-    <View style={styles.container}>
-      <TouchableWithoutFeedback onPress={keyboardHide}>
-        <View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={{ flexGrow: 1 }}>
+          <View style={styles.cameraContainer}>
+            <View style={styles.camera}>
+              <View style={styles.imageWrapper}>
+                <Image source={photo} style={styles.image} />
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.buttonAdd,
+                  !photo
+                    ? { backgroundColor: "#ffffff" }
+                    : { backgroundColor: "rgba(255, 255, 255, 0.3)" },
+                ]}
+                onPress={addPhoto}
+              >
+                <Ionicons
+                  name="camera"
+                  size={24}
+                  color={photo ? "#FFFFFF" : "#BDBDBD"}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={styles.photoExistance}>
+            {photo ? "Редагувати фото" : "Завантажте фото"}
+          </Text>
           <KeyboardAvoidingView
+            style={styles.form}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
           >
-            {!isShowKeyboard && (
-              <View>
-                <View style={styles.imageBackground}>
-                  <View style={styles.photoIconWrap}>
-                    <MaterialIcons
-                      name="photo-camera"
-                      size={24}
-                      color="#BDBDBD"
-                    />
-                  </View>
-                </View>
-                <Text style={styles.text}>Завантажте фото</Text>
-              </View>
-            )}
-
             <TextInput
-              value={name}
-              onChangeText={(value) => setName(value)}
               placeholder="Назва..."
-              placeholderTextColor={"#BDBDBD"}
-              onFocus={() => {
-                setIsShowKeyboard(true);
-                setIsNameFocus(true);
-              }}
-              onBlur={() => setIsNameFocus(false)}
-              style={[styles.input, isNameFocus && styles.activeInputFocus]}
+              style={styles.input}
+              placeholderTextColor="#BDBDBD"
+              value={title}
+              onChangeText={setTitle}
             />
-            <View>
-              <Ionicons
-                name="ios-location-outline"
-                size={24}
-                color="#BDBDBD"
-                style={[
-                  styles.locationIcon,
-                  {
-                    color: isLocationFocus
-                      ? styles.locationIconActive
-                      : styles.locationIconInactive,
-                  },
-                ]}
-              />
+            <View style={styles.inputLocationContainer}>
               <TextInput
-                value={location}
-                onChangeText={(value) => setLocation(value)}
                 placeholder="Місцевість..."
-                placeholderTextColor={"#BDBDBD"}
-                onFocus={() => {
-                  setIsShowKeyboard(true);
-                  setIsLocationFocus(true);
-                }}
-                onBlur={() => setIsLocationFocus(false)}
-                style={[
-                  styles.input,
-                  isLocationFocus && styles.activeInputFocus,
-                  styles.locationInput,
-                ]}
+                style={[styles.input, styles.inputLocation]}
+                placeholderTextColor="#BDBDBD"
+                value={location}
+                onChangeText={setLocation}
               />
-            </View>
-            <Pressable style={styles.button}>
-              <Text style={styles.buttonText}>Опублікувати</Text>
-            </Pressable>
-            <View style={styles.trashIconWrap}>
-              <Pressable style={styles.trashButton}>
-                <FontAwesome5 name="trash-alt" size={24} color="#DADADA" />
-              </Pressable>
+              <Feather
+                name="map-pin"
+                size={20}
+                color={"#BDBDBD"}
+                style={styles.iconLocation}
+              />
             </View>
           </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={[
+              styles.publishBtn,
+              photo && title && location
+                ? { backgroundColor: "#FF6C00" }
+                : { backgroundColor: "#F6F6F6" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.publishBtnText,
+                photo && title && location && { color: "#FFFFFF" },
+              ]}
+            >
+              Опублікувати
+            </Text>
+          </TouchableOpacity>
         </View>
-      </TouchableWithoutFeedback>
-    </View>
+        <TouchableOpacity style={styles.deletBtn}>
+          <Feather name="trash-2" size={24} color={"#BDBDBD"} />
+        </TouchableOpacity>
+      </View>
+    </TouchableWithoutFeedback>
   );
-}
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 28,
-    backgroundColor: "#fff",
+    paddingVertical: 30,
+    justifyContent: "flex-end",
+    backgroundColor: "#ffffff",
   },
-  imageBackground: {
-    width: "100%",
-    height: 200,
+  cameraContainer: {
+    position: "relative",
+    height: 240,
+    overflow: "hidden",
     backgroundColor: "#F6F6F6",
     borderWidth: 1,
+    borderStyle: "solid",
     borderColor: "#E8E8E8",
     borderRadius: 8,
+  },
+  camera: {
+    height: 240,
     justifyContent: "center",
     alignItems: "center",
   },
-  photoIconWrap: {
+  imageWrapper: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    resizeMode: "cover",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+    borderRadius: 8,
+  },
+  buttonAdd: {
     width: 60,
     height: 60,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
     borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  text: {
-    marginTop: 8,
+  photoExistance: {
+    color: "#BDBDBD",
     fontSize: 16,
     fontFamily: "Roboto-Regular",
-    color: "#BDBDBD",
-    lineHeight: 19,
+    marginTop: 8,
+  },
+  form: {
+    gap: 16,
+    marginTop: 30,
   },
   input: {
-    width: "100%",
-    height: 35,
+    fontFamily: "Roboto-Regular",
+    fontSize: 16,
+    lineHeight: 19,
+    height: 49,
     borderBottomWidth: 1,
+    borderStyle: "solid",
     borderBottomColor: "#E8E8E8",
-    marginTop: 30,
-    paddingLeft: 0,
+    borderStyle: "solid",
+    backgroundColor: "#FFFFFF",
   },
-  locationInput: {
-    paddingLeft: 25,
+  inputLocationContainer: {
+    position: "relative",
   },
-  activeInputFocus: {
-    borderBottomColor: "#ff6c00",
+  inputLocation: {
+    paddingLeft: 24,
   },
-  locationIcon: {
+  iconLocation: {
     position: "absolute",
-    bottom: 7,
+    left: 0,
+    bottom: 13,
   },
-  locationIconActive: {
-    color: "#ff6c00",
-  },
-  locationIconInactive: {
-    color: "#BDBDBD",
-  },
-  button: {
+  publishBtn: {
+    marginTop: 30,
     width: "100%",
-    height: 50,
-    backgroundColor: "#F6F6F6",
     borderRadius: 100,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 32,
+    height: 51,
   },
-  buttonText: {
+  publishBtnText: {
+    fontSize: 16,
     fontFamily: "Roboto-Regular",
     color: "#BDBDBD",
-    fontSize: 16,
   },
-  trashButton: {
-    width: 70,
-    height: 40,
+  deletBtn: {
+    alignSelf: "center",
     backgroundColor: "#F6F6F6",
     borderRadius: 20,
+    width: 70,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
-    textAlign: "center",
-  },
-  trashIconWrap: {
-    alignItems: "center",
-    marginTop: 90,
+    marginTop: 10,
   },
 });

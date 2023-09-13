@@ -1,74 +1,148 @@
-import { Text, Image, View, StyleSheet, Pressable } from "react-native";
-import { Feather, AntDesign } from "@expo/vector-icons";
+import { FlatList, View } from "react-native";
+import {
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
+import { Background } from "../components/Background";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import specimen from "../images/user-avatar.jpg";
+import specimen1 from "../images/mountains.jpg";
+import specimen2 from "../images/sunset.jpg";
+import specimen3 from "../images/curtain.jpg";
+import { Post } from "../components/Post";
 
-export default function ProfileScreen({ navigation }) {
+const renderItem = ({ item }) => <Post item={item} />;
+
+const specimens = [
+  {
+    id: 1,
+    photo: specimen1,
+    title: "Ліс",
+    comments: 4,
+    nav: "Ukraine",
+    likes: 100,
+  },
+  {
+    id: 2,
+    photo: specimen2,
+    title: "Захід на Чорному морі",
+    comments: 4,
+    nav: "Ukraine",
+    likes: 100,
+  },
+  {
+    id: 3,
+    photo: specimen3,
+    title: "Старий будиночок у Венеції",
+    comments: 4,
+    nav: "Ukraine",
+    likes: 100,
+  },
+];
+
+export const ProfileScreen = () => {
+  const [photo, setPhoto] = useState(specimen);
   return (
-    <View style={styles.container}>
-      <Image
-        source={require("../images/Photo_BG.png")}
-        style={styles.backgroundImage}
-      />
-      <View style={styles.contentWrapper}>
-        <View style={styles.avatar}>
-          <Image
-            source={require("../images/userPhoto2.png")}
-    
-          />
-          <Pressable style={styles.avatarButton}>
-          <AntDesign name="pluscircleo" size={24} color="#E8E8E8" />
-          </Pressable>
-        </View>
-
-        <Pressable
-          onPress={() => navigation.navigate("Login")}
-          style={styles.logOutButton}
-        >
-          <Feather name="log-out" size={24} color="#BDBDBD" />
-        </Pressable>
-        <Text style={styles.userName}>Natali Romanova</Text>
-      </View>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Background>
+        <FlatList
+          ListHeaderComponent={
+            <View style={styles.userInfoContainer}>
+              <TouchableOpacity style={styles.iconLogOut}>
+                <Feather name="log-out" size={24} color={"#BDBDBD"} />
+              </TouchableOpacity>
+              <View style={styles.avatar}>
+                <Image source={photo} style={styles.imageAvatar} />
+                <TouchableOpacity
+                  style={[styles.icon, photo && styles.iconDelete]}
+                >
+                  {!photo ? (
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={25}
+                      color={"#FF6C00"}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="close-outline"
+                      size={20}
+                      color={"#BDBDBD"}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.profileName}>Natalia Romanova</Text>
+            </View>
+          }
+          style={styles.posts}
+          data={specimens}
+          keyExtractor={(specimen) => specimen.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      </Background>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 120,
+    flex: 1,
   },
-  backgroundImage: {
-    position: "absolute",
-    width: 411,
-    zIndex: -1,
+  userInfoContainer: {
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    marginTop: 150,
+  },
+  profileName: {
+    fontFamily: "Roboto-Medium",
+    fontSize: 30,
+    letterSpacing: 1,
+    color: "#212121",
+    marginTop: 86,
+    textAlign: "center",
+    marginBottom: 30,
   },
   avatar: {
-        position: "absolute",
-    left: 147,
-    top: -61,
-  },
-  avatarButton: {
     position: "absolute",
-    right: -12,
-    bottom: 10,
-    backgroundColor: '#FFFFFF',
-borderRadius: 50,
+    top: -60,
+    width: 120,
+    height: 120,
+    backgroundColor: "#F6F6F6",
+    borderRadius: 16,
   },
-
-  userName: {
-    fontFamily: "Roboto-Bold",
-    color: "#212121",
-    fontSize: 30,
-    lineHeight: 35,
-    textAlign: "center",
-    marginTop: 43,
-  },
-  contentWrapper: {
-    backgroundColor: "#fff",
+  imageAvatar: {
     width: "100%",
     height: "100%",
-    paddingHorizontal: 16,
+    borderRadius: 16,
+    resizeMode: "cover",
   },
-  logOutButton: {
-    marginLeft: "auto",
-    marginTop: 22,
+  icon: {
+    position: "absolute",
+    right: -12,
+    bottom: 14,
+    width: 25,
+    height: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 99,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 50,
+  },
+  iconDelete: {
+    borderColor: "#E8E8E8",
+    borderWidth: 1,
+    borderStyle: "solid",
+  },
+  iconLogOut: {
+    position: "absolute",
+    right: 16,
+    top: 22,
   },
 });

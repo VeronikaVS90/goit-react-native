@@ -1,11 +1,7 @@
 import { useFonts } from "expo-font";
-import LoginScreen from "./src/screens/LoginScreen";
-import RegistrationScreen from "./src/screens/RegistrationScreen";
-import { createStackNavigator } from "@react-navigation/stack";
-import { NavigationContainer } from "@react-navigation/native";
-import Home from "./src/screens/Home";
-
-const MainStack  = createStackNavigator();
+import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import { RootNavigator } from './src/routes/RootNavigator';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -17,32 +13,9 @@ export default function App() {
   if (!fontsLoaded) {
     return null;
   }
-
   return (
     <NavigationContainer>
-      <MainStack.Navigator>
-        <MainStack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="Register"
-          component={RegistrationScreen}
-        />
-        <MainStack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="Login"
-          component={LoginScreen}
-        />
-        <MainStack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="Home"
-          component={Home}
-        />
-      </MainStack.Navigator>
+      <RootNavigator/>
     </NavigationContainer>
   );
 }

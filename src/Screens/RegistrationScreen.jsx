@@ -1,273 +1,205 @@
-import React, { useState } from "react";
 import {
   StyleSheet,
+  SafeAreaView,
+  Image,
   View,
+  Text,
   TextInput,
+  Alert,
+  TouchableOpacity,
+  Platform,
   TouchableWithoutFeedback,
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
-  Text,
-  Pressable,
-  Image,
-  TouchableOpacity,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { FormButton } from "../components/FormButton";
+import { InputEmail } from "../components/InputEmail";
+import { InputPassword } from "../components/InputPassword";
+import { Background } from "../components/Background";
+import { useNavigation } from "@react-navigation/native";
 
-const initialState = {
-  login: "",
-  email: "",
-  password: "",
-};
-
-export default function RegistrationScreen({ navigation }) {
-  const [state, setState] = useState(initialState);
-  const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-
-  const [isLoginFocus, setIsLoginFocus] = useState(false);
-  const [isEmailFocus, setIsEmailFocus] = useState(false);
-  const [isPasswordFocus, setIsPasswordFocus] = useState(false);
+export const RegistrationScreen = () => {
+  const navigation = useNavigation();
+  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
+  const [passwd, setPasswd] = useState("");
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
+  const [focusedInput, setFocusedInput] = useState(null);
+  const [photo, setPhoto] = useState(null);
 
-  const keyboardHide = () => {
-    setIsShowKeyboard(false);
-    Keyboard.dismiss();
-  };
-
-  const handleSubmit = () => {
-    keyboardHide();
-    console.log(state);
-    setState(initialState);
-    navigation.navigate("Home");
+  const onSignUp = () => {
+    if (email === "" || passwd === "" || login === "") {
+      return;
+    }
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
+    setEmail("");
+    setPasswd("");
+    setLogin("");
   };
 
   return (
-    <TouchableWithoutFeedback onPress={keyboardHide}>
-      <View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.container}>
-            <Image
-              source={require("../images/Photo_BG.png")}
-              resizeMode="cover"
-              style={styles.image}
-            />
-            <View style={styles.formWrap}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={-150}
+      >
+        <SafeAreaView style={styles.container}>
+          <Background>
+            <View style={styles.wrapper}>
               <View style={styles.avatar}>
-                <Pressable style={styles.avatarButton}>
-                  <AntDesign name="pluscircleo" size={24} color="#FF6C00" />
-                </Pressable>
+                <Image source={photo} style={styles.imageAvatar} />
+                <TouchableOpacity
+                  style={[styles.icon, photo && styles.iconDelete]}
+                >
+                  {!photo ? (
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={25}
+                      color={"#FF6C00"}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="close-outline"
+                      size={20}
+                      color={"#BDBDBD"}
+                    />
+                  )}
+                </TouchableOpacity>
               </View>
               <Text style={styles.title}>Реєстрація</Text>
-
-              <View style={styles.inputWrap}>
+              <View style={styles.form}>
                 <TextInput
-                  value={state.login}
-                  onChangeText={(value) =>
-                    setState((prevState) => ({ ...prevState, login: value }))
-                  }
+                  style={[
+                    styles.input,
+                    focusedInput === "login" && styles.blurBorder,
+                  ]}
+                  keyboardType="default"
                   placeholder="Логін"
                   placeholderTextColor={"#BDBDBD"}
-                  style={[
-                    styles.input,
-                    styles.activeInput,
-                    isLoginFocus && styles.activeInputFocus,
-                  ]}
-                  onFocus={() => {
-                    setIsShowKeyboard(true);
-                    setIsLoginFocus(true);
-                  }}
-                  onBlur={() => setIsLoginFocus(false)}
+                  onChangeText={setLogin}
+                  value={login}
+                  onFocus={() => setFocusedInput("login")}
+                  onBlur={() => setFocusedInput(null)}
                 />
-                <TextInput
-                  value={state.email}
-                  onChangeText={(value) =>
-                    setState((prevState) => ({ ...prevState, email: value }))
-                  }
-                  placeholder="Адреса електронної пошти"
-                  placeholderTextColor={"#BDBDBD"}
-                  style={[
-                    styles.input,
-                    styles.activeInput,
-                    isEmailFocus && styles.activeInputFocus,
-                  ]}
-                  onFocus={() => {
-                    setIsShowKeyboard(true);
-                    setIsEmailFocus(true);
-                  }}
-                  onBlur={() => setIsEmailFocus(false)}
+                <InputEmail
+                  value={email}
+                  changeMethod={setEmail}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput(null)}
+                  focusedInput={focusedInput}
                 />
-                <View style={{ position: "relative" }}>
-                  <TextInput
-                    value={state.password}
-                    onChangeText={(value) =>
-                      setState((prevState) => ({
-                        ...prevState,
-                        password: value,
-                      }))
-                    }
-                    placeholder="Пароль"
-                    placeholderTextColor={"#BDBDBD"}
-                    secureTextEntry={isPasswordHidden}
-                    style={[
-                      styles.input,
-                      styles.activeInput,
-                      isPasswordFocus && styles.activeInputFocus,
-                    ]}
-                    onFocus={() => {
-                      setIsShowKeyboard(true);
-                      setIsPasswordFocus(true);
-                    }}
-                    onBlur={() => setIsPasswordFocus(false)}
-                  />
-                  <Pressable
-                    onPress={() =>
-                      setIsPasswordHidden((prevState) => !prevState)
-                    }
-                    style={styles.toggleButton}
-                  >
-                    <Text style={styles.toggleText}>
-                      {isPasswordHidden ? "Показати" : "Приховати"}
-                    </Text>
-                  </Pressable>
-                </View>
+                <InputPassword
+                  changeMethod={setPasswd}
+                  value={passwd}
+                  isPasswordHidden={isPasswordHidden}
+                  showPasswd={() => setIsPasswordHidden(!isPasswordHidden)}
+                  onFocus={() => setFocusedInput("password")}
+                  onBlur={() => setFocusedInput(null)}
+                  focusedInput={focusedInput}
+                />
               </View>
-
-              {!isShowKeyboard && (
-                <View>
-                  <Pressable onPress={handleSubmit} style={styles.button}>
-                    <Text style={styles.buttonText}>Зареєстуватися</Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => navigation.navigate("Login")}
-                    style={{
-                      marginBottom: 50,
-                    }}
-                  >
-                    <Text style={styles.logInLink}>Вже є акаунт? Увійти</Text>
-                  </Pressable>
-                </View>
-              )}
+              <FormButton text={"Зареєструватися"} method={onSignUp} />
+              <Text
+                style={styles.link}
+                onPress={() => navigation.navigate("Login")}
+              >
+                Вже є акаунт? Увійти
+              </Text>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+          </Background>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    height: "100%",
-    width: "100%",
+    flex: 1,
   },
-
-  formWrap: {
-    backgroundColor: "#FFFFFF",
+  wrapper: {
+    backgroundColor: "white",
+    paddingTop: 92,
+    paddingBottom: 78,
+    paddingRight: 15,
+    paddingLeft: 16,
+    position: "relative",
     width: "100%",
-    paddingHorizontal: 20,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    paddingTop: 70,
   },
-
   avatar: {
-    width: 110,
-    height: 110,
-    backgroundColor: "#F6F6F6",
     position: "absolute",
-    top: -50,
-    left: 150,
+    top: -60,
+    backgroundColor: "#F6F6F6",
+    width: 120,
+    height: 120,
+    borderRadius: 16,
+    marginHorizontal: "auto",
+    alignSelf: "center",
+  },
+  imageAvatar: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
     borderRadius: 16,
   },
-
-  avatarButton: {
+  icon: {
     position: "absolute",
     right: -12,
-    bottom: 10,
-  },
-
-  title: {
-    fontFamily: "Roboto-Medium",
-    textAlign: "center",
-    color: "#212121",
-    fontSize: 30,
-    fontWeight: "500",
-    lineHeight: 35,
-    letterSpacing: 1.6,
-    marginBottom: 20,
-  },
-
-  inputWrap: {
-    flexDirection: "column",
-    marginBottom: 20,
-  },
-
-  image: {
-    position: "absolute",
-    width: "100%",
-    top: 0,
-  },
-
-  input: {
-    height: 45,
-    padding: 15,
-    borderWidth: 1,
-    borderRadius: 8,
-    fontFamily: "Roboto-Regular",
-  },
-
-  activeInput: {
-    borderColor: "#e8e8e8",
-    backgroundColor: "#f6f6f6",
-    marginBottom: 10,
-  },
-
-  activeInputFocus: {
-    borderColor: "#ff6c00",
-    backgroundColor: "#fff",
-  },
-
-  button: {
-    height: 51,
-    backgroundColor: "#FF6C00",
+    bottom: 14,
+    width: 25,
+    height: 25,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 100,
-    marginBottom: 15,
+    zIndex: 99,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 50,
   },
-
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 16,
-    fontFamily: "Roboto-Regular",
+  iconDelete: {
+    borderColor: "#E8E8E8",
+    borderWidth: 1,
+    borderStyle: "solid",
   },
-
-  logInLink: {
+  title: {
+    color: "#212121",
+    fontFamily: "Roboto-Medium",
     textAlign: "center",
-    color: "#1B4371",
+    fontSize: 30,
+    marginBottom: 32,
+  },
+  form: {
+    flexDirection: "column",
+    rowGap: 16,
+    marginBottom: 33,
+  },
+  input: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    width: "100%",
+    padding: 16,
+    fontFamily: "Roboto-Medium",
     fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 19,
-    fontFamily: "Roboto-Regular",
-    textDecorationLine: "underline",
+    height: 50,
+    backgroundColor: "#F6F6F6",
   },
-
-  toggleButton: {
-    position: "absolute",
-    top: 12,
-    right: 20,
-  },
-
-  toggleText: {
+  link: {
+    fontFamily: "Roboto-Medium",
+    fontSize: 16,
     color: "#1B4371",
-    fontFamily: "Roboto-Regular",
-    lineHeight: 19,
+    textAlign: "center",
+    marginTop: 16,
+  },
+  blurBorder: {
+    borderColor: "#FF6C00",
+    backgroundColor: "#ffffff",
   },
 });

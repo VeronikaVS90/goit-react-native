@@ -1,225 +1,115 @@
-import { CardStyleInterpolators } from "@react-navigation/stack";
-import React, { useState } from "react";
 import {
+  SafeAreaView,
   StyleSheet,
   View,
-  TextInput,
+  Text,
   TouchableWithoutFeedback,
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
-  Text,
-  Pressable,
-  Image,
+  Alert,
 } from "react-native";
+import { Background } from "../components/Background";
+import { FormButton } from "../components/FormButton";
+import { InputEmail } from "../components/InputEmail";
+import { InputPassword } from "../components/InputPassword";
+import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 
-const initialState = {
-  login: "",
-  email: "",
-  password: "",
-};
-
-export default function RegistrationScreen({ navigation }) {
-  const [state, setState] = useState(initialState);
-  const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-
-  const [isEmailFocus, setIsEmailFocus] = useState(false);
-  const [isPasswordFocus, setIsPasswordFocus] = useState(false);
+export const LoginScreen = () => {
+  const navigation = useNavigation();
+  const [email, setEmail] = useState("");
+  const [passwd, setPasswd] = useState("");
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
+  const [focusedInput, setFocusedInput] = useState(null);
 
-  const keyboardHide = () => {
-    setIsShowKeyboard(false);
-    Keyboard.dismiss();
-  };
-
-  const handleSubmit = () => {
-    keyboardHide();
-    console.log(state);
-    setState(initialState);
-    navigation.navigate("Home");
+  const onLogin = () => {
+    if (email === "" || passwd === "") {
+      Alert.alert("Something is missed");
+      return;
+    }
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
+    setEmail("");
+    setPasswd("");
   };
 
   return (
-    <TouchableWithoutFeedback onPress={keyboardHide}>
-      <View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.container}>
-            <Image
-              source={require("../images/Photo_BG.png")}
-              resizeMode="cover"
-              style={styles.image}
-            />
-            <View style={styles.formWrap}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={-120}
+      >
+        <SafeAreaView style={styles.container}>
+          <Background>
+            <View style={styles.wrapper}>
               <Text style={styles.title}>Увійти</Text>
-
-              <View style={styles.inputWrap}>
-                <TextInput
-                  value={state.email}
-                  onChangeText={(value) =>
-                    setState((prevState) => ({ ...prevState, email: value }))
-                  }
-                  placeholder="Адреса електронної пошти"
-                  placeholderTextColor={"#BDBDBD"}
-                  style={styles.input}
-                  onFocus={() => {
-                    setIsShowKeyboard(true);
-                    setIsEmailFocus(true);
-                  }}
-                  onBlur={() => setIsEmailFocus(false)}
+              <View style={styles.form}>
+                <InputEmail
+                  value={email}
+                  changeMethod={setEmail}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput(null)}
+                  focusedInput={focusedInput}
                 />
-                <View style={styles.passwordInputContainer}>
-                  <TextInput
-                    value={state.password}
-                    onChangeText={(value) =>
-                      setState((prevState) => ({
-                        ...prevState,
-                        password: value,
-                      }))
-                    }
-                    placeholder="Пароль"
-                    placeholderTextColor={"#BDBDBD"}
-                    secureTextEntry={isPasswordHidden}
-                    style={styles.input}
-                    onFocus={() => {
-                      setIsShowKeyboard(true);
-                      setIsPasswordFocus(true);
-                    }}
-                    onBlur={() => setIsPasswordFocus(false)}
-                  />
-                  <Pressable
-                    onPress={() =>
-                      setIsPasswordHidden((prevState) => !prevState)
-                    }
-                    style={styles.toggleButton}
-                  >
-                    <Text style={styles.toggleText}>
-                      {isPasswordHidden ? "Показати" : "Приховати"}
-                    </Text>
-                  </Pressable>
-                </View>
+                <InputPassword
+                  changeMethod={setPasswd}
+                  value={passwd}
+                  isPasswordHidden={isPasswordHidden}
+                  showPasswd={() => setIsPasswordHidden(!isPasswordHidden)}
+                  onFocus={() => setFocusedInput("password")}
+                  onBlur={() => setFocusedInput(null)}
+                  focusedInput={focusedInput}
+                />
               </View>
-
-              {!isShowKeyboard && (
-                <View style={styles.buttonWrap}>
-                  <Pressable onPress={handleSubmit} style={styles.button}>
-                    <Text style={styles.buttonText}>Увійти</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => {
-                      navigation.navigate("Register");
-                    }}
-                    style={styles.registerLink}
-                  >
-                    <Text style={styles.logInLink}>
-                      Немає акаунту? Зареєструватися
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
+              <FormButton text={"Увійти"} method={onLogin} />
+              <Text
+                style={styles.link}
+                onPress={() => navigation.navigate("Registration")}
+              >
+                Немає акаунту? Зареєструватися
+              </Text>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+          </Background>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    height: "100%",
-    width: "100%",
+    flex: 1,
   },
-
-  formWrap: {
-    backgroundColor: "#FFFFFF",
+  wrapper: {
+    backgroundColor: "white",
+    paddingTop: 32,
+    paddingBottom: 111,
+    paddingHorizontal: 15,
+    position: "relative",
     width: "100%",
-    paddingHorizontal: 20,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    paddingTop: 30,
   },
-
   title: {
+    color: "#212121",
     fontFamily: "Roboto-Medium",
     textAlign: "center",
-    color: "#212121",
     fontSize: 30,
-    fontWeight: "500",
-    lineHeight: 35,
-    letterSpacing: 1.6,
-    marginBottom: 20,
+    marginBottom: 32,
   },
-
-  inputWrap: {
+  form: {
     flexDirection: "column",
-    gap: 16,
-    marginBottom: 30,
+    rowGap: 16,
+    marginBottom: 33,
   },
-
-  passwordInputContainer: {
-    position: "relative",
-  },
-
-  image: {
-    position: "absolute",
-    width: "100%",
-    top: 0,
-  },
-
-  input: {
-    height: 45,
-    padding: 15,
-    borderWidth: 1,
-    borderRadius: 8,
-    fontFamily: "Roboto-Regular",
-    borderColor: "#e8e8e8",
-    backgroundColor: "#f6f6f6",
-  },
-
-  buttonWrap: {
-    marginBottom: 100,
-  },
-
-  button: {
-    height: 51,
-    backgroundColor: "#FF6C00",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 100,
-    marginBottom: 15,
-  },
-
-  buttonText: {
-    color: "#FFFFFF",
+  link: {
+    fontFamily: "Roboto-Medium",
     fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 16,
-    fontFamily: "Roboto-Regular",
-  },
-
-  logInLink: {
+    color: "#1B4371",
     textAlign: "center",
-    color: "#1B4371",
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 19,
-    fontFamily: "Roboto-Regular",
-    textDecorationLine: "underline",
-  },
-
-  toggleButton: {
-    position: "absolute",
-    top: 12,
-    right: 20,
-  },
-
-  toggleText: {
-    color: "#1B4371",
-    fontFamily: "Roboto-Regular",
-    lineHeight: 19,
+    marginTop: 16,
   },
 });
