@@ -11,7 +11,6 @@ import specimen1 from "../images/mountains.jpg";
 import specimen2 from "../images/sunset.jpg";
 import specimen3 from "../images/curtain.jpg";
 import { Post } from "../components/Post";
-import { ScrollView } from "react-native-gesture-handler";
 
 const renderItem = ({ item }) => <Post item={item} />;
 
@@ -23,6 +22,10 @@ const specimens = [
     comments: 4,
     nav: "Ukraine",
     likes: 100,
+    coordinates: {
+      latitude: 48.9226,
+      longitude: 24.7111,
+    },
   },
   {
     id: 2,
@@ -31,6 +34,10 @@ const specimens = [
     comments: 4,
     nav: "Ukraine",
     likes: 100,
+    coordinates: {
+      latitude: 46.0815,
+      longitude: 30.4372,
+    },
   },
   {
     id: 3,
@@ -39,10 +46,14 @@ const specimens = [
     comments: 4,
     nav: "Ukraine",
     likes: 100,
+    coordinates: {
+      latitude: 45.4408,
+      longitude: 12.3155,
+    },
   },
 ];
 
-export const PostsScreen = () => {
+export const PostsScreen = ({ route: { params } }) => {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -55,7 +66,6 @@ export const PostsScreen = () => {
             </View>
           </View>
         }
-        style={styles.posts}
         data={specimens}
         keyExtractor={(specimen) => specimen.id}
         renderItem={renderItem}

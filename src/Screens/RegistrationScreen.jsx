@@ -1,11 +1,9 @@
 import {
   StyleSheet,
-  SafeAreaView,
   Image,
   View,
   Text,
   TextInput,
-  Alert,
   TouchableOpacity,
   Platform,
   TouchableWithoutFeedback,
@@ -49,7 +47,7 @@ export const RegistrationScreen = () => {
         style={styles.container}
         keyboardVerticalOffset={-150}
       >
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
           <Background>
             <View style={styles.wrapper}>
               <View style={styles.avatar}>
@@ -113,7 +111,7 @@ export const RegistrationScreen = () => {
               </Text>
             </View>
           </Background>
-        </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

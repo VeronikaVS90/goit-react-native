@@ -25,6 +25,10 @@ const specimens = [
     comments: 4,
     nav: "Ukraine",
     likes: 100,
+    coordinates: {
+      latitude: 48.9226,
+      longitude: 24.7111,
+    },
   },
   {
     id: 2,
@@ -33,6 +37,10 @@ const specimens = [
     comments: 4,
     nav: "Ukraine",
     likes: 100,
+    coordinates: {
+      latitude: 46.0815,
+      longitude: 30.4372,
+    },
   },
   {
     id: 3,
@@ -41,6 +49,10 @@ const specimens = [
     comments: 4,
     nav: "Ukraine",
     likes: 100,
+    coordinates: {
+      latitude: 45.4408,
+      longitude: 12.3155,
+    },
   },
 ];
 

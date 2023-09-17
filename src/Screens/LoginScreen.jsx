@@ -1,12 +1,10 @@
 import {
-  SafeAreaView,
   StyleSheet,
   View,
   Text,
   TouchableWithoutFeedback,
   Keyboard,
   KeyboardAvoidingView,
-  Alert,
 } from "react-native";
 import { Background } from "../components/Background";
 import { FormButton } from "../components/FormButton";
@@ -42,7 +40,7 @@ export const LoginScreen = () => {
         style={styles.container}
         keyboardVerticalOffset={-120}
       >
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
           <Background>
             <View style={styles.wrapper}>
               <Text style={styles.title}>Увійти</Text>
@@ -73,7 +71,7 @@ export const LoginScreen = () => {
               </Text>
             </View>
           </Background>
-        </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

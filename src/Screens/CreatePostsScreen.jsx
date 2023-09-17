@@ -7,29 +7,116 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
+  Platform,
 } from "react-native";
-import specimen from "../images/mountains.jpg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-gesture-handler";
+import { Camera } from "expo-camera";
+import * as MediaLibrary from "expo-media-library";
+import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
+import { nanoid } from "@reduxjs/toolkit";
 
 export const CreatePostsScreen = () => {
+  const navigation = useNavigation();
   const [title, setTitle] = useState("");
-  const [location, setLocation] = useState("");
-  const [photo, setPhoto] = useState(null);
+  const [photo, setPhoto] = useState("");
+  const [focusedInput, setFocusedInput] = useState(null);
 
-  const addPhoto = () => {
-    photo ? setPhoto(null) : setPhoto(specimen);
+  const [location, setLocation] = useState("");
+  const [coordinates, setCoordinates] = useState(null);
+
+  const [hasPermission, setHasPermission] = useState(null);
+  const [cameraRef, setCameraRef] = useState(null);
+  const [type, setType] = useState(Camera.Constants.Type.back);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        await MediaLibrary.requestPermissionsAsync();
+        setHasPermission(status === "granted");
+      } catch (error) {
+        setHasPermission(false);
+        navigation.navigate("Posts");
+      }
+    })();
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Permission to access location was denied");
+        }
+        let locationData = await Location.getCurrentPositionAsync({});
+        const coords = {
+          latitude: locationData.coords.latitude,
+          longitude: locationData.coords.longitude,
+        };
+        setCoordinates(coords);
+      } catch (error) {
+        navigation.navigate("Posts");
+      }
+    })();
+  }, []);
+
+  const takePhoto = async () => {
+    if (cameraRef) {
+      try {
+        const { uri } = await cameraRef.takePictureAsync();
+        await MediaLibrary.createAssetAsync(uri);
+        setPhoto(uri);
+      } catch (error) {
+        setPhoto("");
+      }
+    }
   };
+
+  const deletePhoto = () => {
+    setPhoto("");
+  };
+
+  const turnCamera = () => {
+    setType(
+      type === Camera.Constants.Type.back
+        ? Camera.Constants.Type.front
+        : Camera.Constants.Type.back
+    );
+  };
+
+  const deleteAll = () => {
+    setPhoto("");
+    setTitle("");
+    setLocation("");
+  };
+
+  const sendPhoto = () => {
+    if (photo === "" || title === "" || location === "") return;
+    navigation.navigate("Posts", {
+      photo,
+      title,
+      location,
+      coordinates,
+      id: nanoid(),
+    });
+    deleteAll();
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={90}
+        style={styles.container}
+      >
         <View style={{ flexGrow: 1 }}>
           <View style={styles.cameraContainer}>
-            <View style={styles.camera}>
-              <View style={styles.imageWrapper}>
-                <Image source={photo} style={styles.image} />
-              </View>
+            <Camera style={styles.camera} ref={setCameraRef} type={type}>
+              {photo && (
+                <View style={styles.imageWrapper}>
+                  <Image source={{ uri: photo }} style={styles.image} />
+                </View>
+              )}
               <TouchableOpacity
                 style={[
                   styles.buttonAdd,
@@ -37,7 +124,7 @@ export const CreatePostsScreen = () => {
                     ? { backgroundColor: "#ffffff" }
                     : { backgroundColor: "rgba(255, 255, 255, 0.3)" },
                 ]}
-                onPress={addPhoto}
+                onPress={takePhoto}
               >
                 <Ionicons
                   name="camera"
@@ -45,38 +132,55 @@ export const CreatePostsScreen = () => {
                   color={photo ? "#FFFFFF" : "#BDBDBD"}
                 />
               </TouchableOpacity>
-            </View>
+            </Camera>
           </View>
-          <Text style={styles.photoExistance}>
-            {photo ? "Редагувати фото" : "Завантажте фото"}
-          </Text>
-          <KeyboardAvoidingView
-            style={styles.form}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-          >
+          <View style={styles.photoEditors}>
+            <Text
+              style={styles.photoExistance}
+              onPress={deletePhoto}
+              disabled={!photo}
+            >
+              {photo ? "Редагувати фото" : "Завантажте фото"}
+            </Text>
+            <TouchableOpacity onPress={turnCamera}>
+              <Ionicons name="repeat-outline" size={24} color={"#BDBDBD"} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.form}>
             <TextInput
               placeholder="Назва..."
-              style={styles.input}
+              style={[
+                styles.input,
+                focusedInput === "title" && styles.focusedInput,
+              ]}
               placeholderTextColor="#BDBDBD"
               value={title}
               onChangeText={setTitle}
+              onFocus={() => setFocusedInput("title")}
+              onBlur={() => setFocusedInput(null)}
             />
             <View style={styles.inputLocationContainer}>
               <TextInput
                 placeholder="Місцевість..."
-                style={[styles.input, styles.inputLocation]}
+                style={[
+                  styles.input,
+                  styles.inputLocation,
+                  focusedInput === "location" && styles.focusedInput,
+                ]}
                 placeholderTextColor="#BDBDBD"
                 value={location}
                 onChangeText={setLocation}
+                onFocus={() => setFocusedInput("location")}
+                onBlur={() => setFocusedInput(null)}
               />
               <Feather
                 name="map-pin"
                 size={20}
-                color={"#BDBDBD"}
+                color={focusedInput === "location" ? "#FF6C00" : "#BDBDBD"}
                 style={styles.iconLocation}
               />
             </View>
-          </KeyboardAvoidingView>
+          </View>
           <TouchableOpacity
             style={[
               styles.publishBtn,
@@ -84,6 +188,7 @@ export const CreatePostsScreen = () => {
                 ? { backgroundColor: "#FF6C00" }
                 : { backgroundColor: "#F6F6F6" },
             ]}
+            onPress={sendPhoto}
           >
             <Text
               style={[
@@ -95,10 +200,22 @@ export const CreatePostsScreen = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.deletBtn}>
-          <Feather name="trash-2" size={24} color={"#BDBDBD"} />
+        <TouchableOpacity
+          style={[
+            styles.deletBtn,
+            photo && title && location
+              ? { backgroundColor: "#FF6C00" }
+              : { backgroundColor: "#F6F6F6" },
+          ]}
+          onPress={deleteAll}
+        >
+          <Feather
+            name="trash-2"
+            size={24}
+            color={photo && title && location ? "#FFFFFF" : "#BDBDBD"}
+          />
         </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };
@@ -120,6 +237,11 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
     borderColor: "#E8E8E8",
     borderRadius: 8,
+  },
+  photoEditors: {
+    flexDirection: "row",
+    marginTop: 8,
+    justifyContent: "space-between",
   },
   camera: {
     height: 240,
@@ -149,7 +271,6 @@ const styles = StyleSheet.create({
     color: "#BDBDBD",
     fontSize: 16,
     fontFamily: "Roboto-Regular",
-    marginTop: 8,
   },
   form: {
     gap: 16,
@@ -165,6 +286,9 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E8E8E8",
     borderStyle: "solid",
     backgroundColor: "#FFFFFF",
+  },
+  focusedInput: {
+    borderBottomColor: "#FF6C00",
   },
   inputLocationContainer: {
     position: "relative",
@@ -192,12 +316,12 @@ const styles = StyleSheet.create({
   },
   deletBtn: {
     alignSelf: "center",
-    backgroundColor: "#F6F6F6",
     borderRadius: 20,
     width: 70,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,
+    marginBottom: 20,
   },
 });
