@@ -87,7 +87,7 @@ export const ProfileScreen = () => {
                   )}
                 </TouchableOpacity>
               </View>
-              <Text style={styles.profileName}>Natalia Romanova</Text>
+              <Text style={styles.profileName}>Natali Romanova</Text>
             </View>
           }
           style={styles.posts}
