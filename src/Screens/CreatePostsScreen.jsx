@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Image,
@@ -8,8 +9,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import { useState, useEffect } from "react";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-gesture-handler";
 import { Camera } from "expo-camera";
@@ -30,6 +31,7 @@ export const CreatePostsScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
   const [type, setType] = useState(Camera.Constants.Type.back);
+  const [takingPhoto, setTakingPhoto] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -61,13 +63,16 @@ export const CreatePostsScreen = () => {
   }, []);
 
   const takePhoto = async () => {
-    if (cameraRef) {
+    if (cameraRef && !takingPhoto) {
       try {
+        setTakingPhoto(true);
         const { uri } = await cameraRef.takePictureAsync();
         await MediaLibrary.createAssetAsync(uri);
         setPhoto(uri);
       } catch (error) {
         setPhoto("");
+      } finally {
+        setTakingPhoto(false);
       }
     }
   };
@@ -92,6 +97,7 @@ export const CreatePostsScreen = () => {
 
   const sendPhoto = () => {
     if (photo === "" || title === "" || location === "") return;
+    console.log("Coordinates:", coordinates); // Додано вивід координат
     navigation.navigate("Posts", {
       photo,
       title,
@@ -125,12 +131,17 @@ export const CreatePostsScreen = () => {
                     : { backgroundColor: "rgba(255, 255, 255, 0.3)" },
                 ]}
                 onPress={takePhoto}
+                disabled={takingPhoto}
               >
-                <Ionicons
-                  name="camera"
-                  size={24}
-                  color={photo ? "#FFFFFF" : "#BDBDBD"}
-                />
+                {takingPhoto ? (
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                ) : (
+                  <Ionicons
+                    name="camera"
+                    size={24}
+                    color={photo ? "#FFFFFF" : "#BDBDBD"}
+                  />
+                )}
               </TouchableOpacity>
             </Camera>
           </View>
@@ -203,16 +214,17 @@ export const CreatePostsScreen = () => {
         <TouchableOpacity
           style={[
             styles.deletBtn,
-            photo && title && location
+            photo
               ? { backgroundColor: "#FF6C00" }
               : { backgroundColor: "#F6F6F6" },
           ]}
           onPress={deleteAll}
+          disabled={!photo}
         >
           <Feather
             name="trash-2"
             size={24}
-            color={photo && title && location ? "#FFFFFF" : "#BDBDBD"}
+            color={photo ? "#FFFFFF" : "#BDBDBD"}
           />
         </TouchableOpacity>
       </KeyboardAvoidingView>

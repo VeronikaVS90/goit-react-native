@@ -5,6 +5,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import { Background } from "../components/Background";
 import { FormButton } from "../components/FormButton";
