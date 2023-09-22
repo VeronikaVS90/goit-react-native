@@ -134,7 +134,7 @@ export const CreatePostsScreen = () => {
                 disabled={takingPhoto}
               >
                 {takingPhoto ? (
-                  <ActivityIndicator size="large" color="#FFFFFF" />
+                  <ActivityIndicator size="large" color="#FF6C00" />
                 ) : (
                   <Ionicons
                     name="camera"
@@ -244,7 +244,8 @@ const styles = StyleSheet.create({
     position: "relative",
     height: 240,
     overflow: "hidden",
-    backgroundColor: "#F6F6F6",
+    backgroundColor: "#000000",
+    // backgroundColor: "#F6F6F6",
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: "#E8E8E8",
