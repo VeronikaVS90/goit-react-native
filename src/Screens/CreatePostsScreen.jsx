@@ -116,19 +116,16 @@ export const CreatePostsScreen = () => {
         style={styles.container}
       >
         <View style={{ flexGrow: 1 }}>
-          <View style={styles.cameraContainer}>
+          {photo ? (
+            <View style={styles.cameraContainer}>
+              <Image source={{ uri: photo }} style={styles.image} />
+            </View>
+          ) : (
             <Camera style={styles.camera} ref={setCameraRef} type={type}>
-              {photo && (
-                <View style={styles.imageWrapper}>
-                  <Image source={{ uri: photo }} style={styles.image} />
-                </View>
-              )}
               <TouchableOpacity
                 style={[
                   styles.buttonAdd,
-                  !photo
-                    ? { backgroundColor: "#ffffff" }
-                    : { backgroundColor: "rgba(255, 255, 255, 0.3)" },
+                  { backgroundColor: takingPhoto ? "transparent" : "#ffffff" },
                 ]}
                 onPress={takePhoto}
                 disabled={takingPhoto}
@@ -136,15 +133,11 @@ export const CreatePostsScreen = () => {
                 {takingPhoto ? (
                   <ActivityIndicator size="large" color="#FF6C00" />
                 ) : (
-                  <Ionicons
-                    name="camera"
-                    size={24}
-                    color={photo ? "#FFFFFF" : "#BDBDBD"}
-                  />
+                  <Ionicons name="camera" size={24} color="#BDBDBD" />
                 )}
               </TouchableOpacity>
             </Camera>
-          </View>
+          )}
           <View style={styles.photoEditors}>
             <Text
               style={styles.photoExistance}
@@ -245,7 +238,6 @@ const styles = StyleSheet.create({
     height: 240,
     overflow: "hidden",
     backgroundColor: "#000000",
-    // backgroundColor: "#F6F6F6",
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: "#E8E8E8",
@@ -260,12 +252,6 @@ const styles = StyleSheet.create({
     height: 240,
     justifyContent: "center",
     alignItems: "center",
-  },
-  imageWrapper: {
-    width: "100%",
-    height: "100%",
-    position: "absolute",
-    resizeMode: "cover",
   },
   image: {
     width: "100%",
