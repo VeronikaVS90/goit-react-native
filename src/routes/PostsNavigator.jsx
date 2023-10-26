@@ -5,11 +5,15 @@ import { MapScreen } from "../screens/MapScreen";
 import { TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useDispatch } from "react-redux";
+import { logOut } from "../redux/operations";
 
 const PostsStackNavigator = createStackNavigator();
 
 export const PostsNavigator = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
+
   return (
     <PostsStackNavigator.Navigator
       initialRouteName="Posts"
@@ -38,18 +42,14 @@ export const PostsNavigator = () => {
           headerRight: () => (
             <TouchableOpacity
               style={styles.logOutIcon}
-              onPress={() =>
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: "Login" }],
-                })
-              }
+              onPress={() => dispatch(logOut())}
             >
               <Feather name="log-out" size={24} color={"#BDBDBD"} />
             </TouchableOpacity>
           ),
         })}
       />
+
       <PostsStackNavigator.Screen
         name="Comments"
         component={CommentsScreen}
@@ -58,7 +58,9 @@ export const PostsNavigator = () => {
           headerLeft: () => (
             <TouchableOpacity
               style={styles.backIcon}
-              onPress={() => navigation.navigate("Posts")}
+              onPress={() =>
+                navigation.navigate("PostsScreen", { screen: "Posts" })
+              }
             >
               <Feather
                 name="arrow-left"

@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Image,
@@ -9,15 +8,21 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
-  ActivityIndicator,
 } from "react-native";
+import { useState, useEffect } from "react";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-gesture-handler";
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as Location from "expo-location";
 import { useNavigation } from "@react-navigation/native";
-import { nanoid } from "@reduxjs/toolkit";
+import * as ImagePicker from "expo-image-picker";
+import { useSelector } from "react-redux";
+import { selectId } from "../redux/selectors";
+import { addPost } from "../firebase/firestore";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { storage } from "../firebase/config";
+import { Loader } from "../components/Loader";
 
 export const CreatePostsScreen = () => {
   const navigation = useNavigation();
@@ -31,7 +36,8 @@ export const CreatePostsScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
   const [type, setType] = useState(Camera.Constants.Type.back);
-  const [takingPhoto, setTakingPhoto] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const userId = useSelector(selectId);
 
   useEffect(() => {
     (async () => {
@@ -63,16 +69,16 @@ export const CreatePostsScreen = () => {
   }, []);
 
   const takePhoto = async () => {
-    if (cameraRef && !takingPhoto) {
+    if (cameraRef) {
       try {
-        setTakingPhoto(true);
+        setIsLoading(true);
         const { uri } = await cameraRef.takePictureAsync();
         await MediaLibrary.createAssetAsync(uri);
         setPhoto(uri);
       } catch (error) {
         setPhoto("");
       } finally {
-        setTakingPhoto(false);
+        setIsLoading(false);
       }
     }
   };
@@ -89,60 +95,102 @@ export const CreatePostsScreen = () => {
     );
   };
 
+  const loadPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setPhoto(result.assets[0].uri);
+    }
+  };
+
   const deleteAll = () => {
     setPhoto("");
     setTitle("");
     setLocation("");
   };
 
-  const sendPhoto = () => {
+  const sendPhoto = async () => {
     if (photo === "" || title === "" || location === "") return;
-    console.log("Coordinates:", coordinates); // Додано вивід координат
-    navigation.navigate("Posts", {
-      photo,
+
+    setIsLoading(true);
+    const response = await fetch(photo);
+    const file = await response.blob();
+    const photoId = Date.now().toString();
+    const refPath = ref(storage, `image/${photoId}`);
+    const upload = await uploadBytesResumable(refPath, file);
+    const downloadURL = await getDownloadURL(upload.ref);
+    const newPost = {
+      photo: downloadURL,
       title,
       location,
       coordinates,
-      id: nanoid(),
-    });
+      likes: {
+        people: [],
+        amount: 0,
+      },
+      userId,
+      createdDate: Date.now(),
+    };
+    await addPost(newPost);
+    navigation.navigate("PostsScreen");
     deleteAll();
+    setIsLoading(false);
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      {isLoading === true && photo && <Loader />}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={90}
         style={styles.container}
       >
         <View style={{ flexGrow: 1 }}>
-          {photo ? (
-            <View style={styles.cameraContainer}>
-              <Image source={{ uri: photo }} style={styles.image} />
-            </View>
-          ) : (
-            <Camera style={styles.camera} ref={setCameraRef} type={type}>
-              <TouchableOpacity
-                style={[
-                  styles.buttonAdd,
-                  { backgroundColor: takingPhoto ? "transparent" : "#ffffff" },
-                ]}
-                onPress={takePhoto}
-                disabled={takingPhoto}
-              >
-                {takingPhoto ? (
-                  <ActivityIndicator size="large" color="#FF6C00" />
-                ) : (
-                  <Ionicons name="camera" size={24} color="#BDBDBD" />
-                )}
-              </TouchableOpacity>
-            </Camera>
-          )}
+          <View style={styles.cameraContainer}>
+            {photo ? (
+              <View style={styles.camera}>
+                <View style={styles.imageWrapper}>
+                  <Image source={{ uri: photo }} style={styles.image} />
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.buttonAdd,
+                    { backgroundColor: "rgba(255, 255, 255, 0.3)" },
+                  ]}
+                  onPress={deletePhoto}
+                >
+                  {!isLoading ? (
+                    <Ionicons name="camera" size={24} color={"#FFFFFF"} />
+                  ) : (
+                    <Ionicons name="time-outline" size={30} color={"#FFFFFF"} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Camera style={styles.camera} ref={setCameraRef} type={type}>
+                <TouchableOpacity
+                  style={[styles.buttonAdd, { backgroundColor: "#ffffff" }]}
+                  onPress={takePhoto}
+                  disabled={isLoading ? true : false}
+                >
+                  {!isLoading ? (
+                    <Ionicons name="camera" size={24} color={"#BDBDBD"} />
+                  ) : (
+                    <Ionicons name="time-outline" size={30} color={"#BDBDBD"} />
+                  )}
+                </TouchableOpacity>
+              </Camera>
+            )}
+          </View>
           <View style={styles.photoEditors}>
             <Text
               style={styles.photoExistance}
-              onPress={deletePhoto}
-              disabled={!photo}
+              onPress={loadPhoto}
+              disabled={photo ? true : false}
             >
               {photo ? "Редагувати фото" : "Завантажте фото"}
             </Text>
@@ -207,17 +255,16 @@ export const CreatePostsScreen = () => {
         <TouchableOpacity
           style={[
             styles.deletBtn,
-            photo
+            photo && title && location
               ? { backgroundColor: "#FF6C00" }
               : { backgroundColor: "#F6F6F6" },
           ]}
           onPress={deleteAll}
-          disabled={!photo}
         >
           <Feather
             name="trash-2"
             size={24}
-            color={photo ? "#FFFFFF" : "#BDBDBD"}
+            color={photo && title && location ? "#FFFFFF" : "#BDBDBD"}
           />
         </TouchableOpacity>
       </KeyboardAvoidingView>

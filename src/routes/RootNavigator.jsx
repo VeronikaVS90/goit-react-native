@@ -2,10 +2,26 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { RegistrationScreen } from "../screens/RegistrationScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { HomeBottomNavigator } from "./HomeBottomNavigator";
+import { useSelector } from "react-redux";
+import { selectIsAuth } from "../redux/selectors";
 
 const MainStack = createStackNavigator();
 
-export const RootNavigator = () => {
+export const AuthStack = () => {
+  const isAuth = useSelector(selectIsAuth);
+
+  if (isAuth) {
+    return (
+      <MainStack.Navigator initialRouteName="Home">
+        <MainStack.Screen
+          options={{ headerShown: false }}
+          name="Home"
+          component={HomeBottomStack}
+        />
+      </MainStack.Navigator>
+    );
+  }
+
   return (
     <MainStack.Navigator initialRouteName="Login">
       <MainStack.Screen
@@ -17,11 +33,6 @@ export const RootNavigator = () => {
         options={{ headerShown: false }}
         name="Login"
         component={LoginScreen}
-      />
-      <MainStack.Screen
-        options={{ headerShown: false }}
-        name="Home"
-        component={HomeBottomNavigator}
       />
     </MainStack.Navigator>
   );

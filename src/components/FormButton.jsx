@@ -1,9 +1,13 @@
 import { StyleSheet, TouchableOpacity, Text } from "react-native";
 
-export const FormButton = ({ text, method }) => {
+export const FormButton = ({ text, method, disabled }) => {
   return (
     <>
-      <TouchableOpacity style={styles.button} onPress={method}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={method}
+        disabled={disabled}
+      >
         <Text style={styles.buttonText}>{text}</Text>
       </TouchableOpacity>
     </>

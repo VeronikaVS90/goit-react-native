@@ -6,71 +6,72 @@ import {
   SafeAreaView,
   FlatList,
 } from "react-native";
-import specimen from "../images/user-avatar.jpg";
-import specimen1 from "../images/mountains.jpg";
-import specimen2 from "../images/sunset.jpg";
-import specimen3 from "../images/curtain.jpg";
 import { Post } from "../components/Post";
+import { useSelector } from "react-redux";
+import { selectAvatar, selectEmail, selectLogin } from "../redux/selectors";
+import { useEffect, useState } from "react";
+import { postsRef } from "../firebase/firestore";
+import { Loader } from "../components/Loader";
+import {
+  orderBy,
+  query,
+  onSnapshot,
+  getDocs,
+  collection,
+} from "firebase/firestore";
+import { db } from "../firebase/config";
 
 const renderItem = ({ item }) => <Post item={item} />;
 
-const specimens = [
-  {
-    id: 1,
-    photo: specimen1,
-    title: "Ліс",
-    comments: 4,
-    nav: "Ukraine",
-    likes: 100,
-    coordinates: {
-      latitude: 48.9226,
-      longitude: 24.7111,
-    },
-  },
-  {
-    id: 2,
-    photo: specimen2,
-    title: "Захід на Чорному морі",
-    comments: 4,
-    nav: "Ukraine",
-    likes: 100,
-    coordinates: {
-      latitude: 46.0815,
-      longitude: 30.4372,
-    },
-  },
-  {
-    id: 3,
-    photo: specimen3,
-    title: "Старий будиночок у Венеції",
-    comments: 4,
-    nav: "Ukraine",
-    likes: 100,
-    coordinates: {
-      latitude: 45.4408,
-      longitude: 12.3155,
-    },
-  },
-];
+export const PostsScreen = () => {
+  const [posts, setPosts] = useState([]);
+  const login = useSelector(selectLogin);
+  const avatar = useSelector(selectAvatar);
+  const email = useSelector(selectEmail);
+  const [isLoading, setIsLoading] = useState(true);
 
-export const PostsScreen = ({ route: { params } }) => {
+  const fetchData = async () => {
+    const q = query(postsRef, orderBy("createdDate", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updatedPosts = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts(updatedPosts);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        ListHeaderComponent={
-          <View style={styles.user}>
-            <Image source={specimen} style={styles.userImage} />
-            <View>
-              <Text style={styles.userName}>Natali Romanova</Text>
-              <Text style={styles.userEmail}>email@example.com</Text>
+      {isLoading === true && <Loader />}
+      {posts.length !== 0 && (
+        <FlatList
+          ListHeaderComponent={
+            <View style={styles.user}>
+              {avatar && (
+                <Image source={{ uri: avatar }} style={styles.userImage} />
+              )}
+              {login && email && (
+                <View>
+                  <Text style={styles.userName}>{login}</Text>
+                  <Text style={styles.userEmail}>{email}</Text>
+                </View>
+              )}
             </View>
-          </View>
-        }
-        data={specimens}
-        keyExtractor={(specimen) => specimen.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-      />
+          }
+          data={posts}
+          keyExtractor={(posts) => posts.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 };

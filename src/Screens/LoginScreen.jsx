@@ -5,7 +5,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   KeyboardAvoidingView,
-  Alert,
 } from "react-native";
 import { Background } from "../components/Background";
 import { FormButton } from "../components/FormButton";
@@ -13,23 +12,31 @@ import { InputEmail } from "../components/InputEmail";
 import { InputPassword } from "../components/InputPassword";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { useDispatch, useSelector } from "react-redux";
+import { signIn } from "../redux/operations";
 
 export const LoginScreen = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [passwd, setPasswd] = useState("");
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const onLogin = () => {
     if (email === "" || passwd === "") {
-      Alert.alert("Something is missed");
       return;
     }
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Home" }],
-    });
+    const user = { email, passwd };
+    try {
+      setIsLoading(true);
+      dispatch(signIn(user));
+    } catch (error) {
+      return;
+    } finally {
+      setIsLoading(false);
+    }
     setEmail("");
     setPasswd("");
   };
@@ -63,7 +70,11 @@ export const LoginScreen = () => {
                   focusedInput={focusedInput}
                 />
               </View>
-              <FormButton text={"Увійти"} method={onLogin} />
+              <FormButton
+                text={"Увійти"}
+                method={onLogin}
+                disabled={isLoading ? true : false}
+              />
               <Text
                 style={styles.link}
                 onPress={() => navigation.navigate("Registration")}

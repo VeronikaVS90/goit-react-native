@@ -8,91 +8,101 @@ import {
 } from "react-native";
 import { Background } from "../components/Background";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import specimen from "../images/user-avatar.jpg";
-import specimen1 from "../images/mountains.jpg";
-import specimen2 from "../images/sunset.jpg";
-import specimen3 from "../images/curtain.jpg";
+import { useEffect, useState } from "react";
 import { Post } from "../components/Post";
+import { useDispatch, useSelector } from "react-redux";
+import { logOut, updateProfile } from "../redux/operations";
+import { selectAvatar, selectId, selectLogin } from "../redux/selectors";
+import * as ImagePicker from "expo-image-picker";
+import { getUserPosts } from "../firebase/firestore";
+import { Loader } from "../components/Loader";
 
 const renderItem = ({ item }) => <Post item={item} />;
 
-const specimens = [
-  {
-    id: 1,
-    photo: specimen1,
-    title: "Ліс",
-    comments: 4,
-    nav: "Ukraine",
-    likes: 100,
-    coordinates: {
-      latitude: 48.9226,
-      longitude: 24.7111,
-    },
-  },
-  {
-    id: 2,
-    photo: specimen2,
-    title: "Захід на Чорному морі",
-    comments: 4,
-    nav: "Ukraine",
-    likes: 100,
-    coordinates: {
-      latitude: 46.0815,
-      longitude: 30.4372,
-    },
-  },
-  {
-    id: 3,
-    photo: specimen3,
-    title: "Старий будиночок у Венеції",
-    comments: 4,
-    nav: "Ukraine",
-    likes: 100,
-    coordinates: {
-      latitude: 45.4408,
-      longitude: 12.3155,
-    },
-  },
-];
-
 export const ProfileScreen = () => {
-  const [photo, setPhoto] = useState(specimen);
+  const dispatch = useDispatch();
+  const login = useSelector(selectLogin);
+  const avatar = useSelector(selectAvatar);
+  const userId = useSelector(selectId);
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      const dataPosts = await getUserPosts(userId);
+      setPosts(dataPosts);
+    } catch (error) {
+      return;
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const deletePhoto = () => {
+    dispatch(updateProfile(null));
+  };
+
+  const renewPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      dispatch(updateProfile(result.assets[0].uri));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      {iaLoading && <Loader />}
       <Background>
         <FlatList
           ListHeaderComponent={
             <View style={styles.userInfoContainer}>
-              <TouchableOpacity style={styles.iconLogOut}>
+              <TouchableOpacity
+                style={styles.iconLogOut}
+                onPress={() => {
+                  dispatch(logOut());
+                }}
+              >
                 <Feather name="log-out" size={24} color={"#BDBDBD"} />
               </TouchableOpacity>
               <View style={styles.avatar}>
-                <Image source={photo} style={styles.imageAvatar} />
-                <TouchableOpacity
-                  style={[styles.icon, photo && styles.iconDelete]}
-                >
-                  {!photo ? (
+                {avatar && (
+                  <Image source={{ uri: avatar }} style={styles.imageAvatar} />
+                )}
+                {!avatar ? (
+                  <TouchableOpacity style={[styles.icon]} onPress={renewPhoto}>
                     <Ionicons
                       name="add-circle-outline"
                       size={25}
                       color={"#FF6C00"}
                     />
-                  ) : (
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.icon, styles.iconDelete]}
+                    onPress={deletePhoto}
+                  >
                     <Ionicons
                       name="close-outline"
                       size={20}
                       color={"#BDBDBD"}
                     />
-                  )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
               </View>
-              <Text style={styles.profileName}>Natali Romanova</Text>
+              <Text style={styles.profileName}>{login}</Text>
             </View>
           }
           style={styles.posts}
-          data={specimens}
-          keyExtractor={(specimen) => specimen.id}
+          data={posts}
+          keyExtractor={(post) => post.id}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
         />
@@ -104,6 +114,9 @@ export const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  posts: {
+    flexGrow: 0,
   },
   userInfoContainer: {
     borderTopLeftRadius: 25,

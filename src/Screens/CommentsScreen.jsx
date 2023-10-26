@@ -1,106 +1,152 @@
-import { useState } from "react";
 import {
-  FlatList,
-  Image,
+  KeyboardAvoidingView,
   StyleSheet,
-  Text,
+  FlatList,
+  View,
+  Image,
   TextInput,
   TouchableOpacity,
-  View,
+  Text,
+  Keyboard,
 } from "react-native";
-
-import specimen from "../images/user-avatar.jpg";
-import specimen0 from "../images/user.png";
-import specimen1 from "../images/mountains.jpg";
 import { Feather } from "@expo/vector-icons";
-
-const comments = [
-  {
-    id: 1,
-    text: "Really love your most recent photo. I’ve been trying to capture the same thing for a few months and would love some tips!",
-    userPhoto: specimen0,
-    date: "09 червня, 2020 | 08:40",
-    author: "other",
-  },
-  {
-    id: 2,
-    text: "A fast 50mm like f1.8 would help with the bokeh. I’ve been using primes as they tend to get a bit sharper images.",
-    userPhoto: specimen,
-    date: "09 червня, 2020 | 09:14",
-    author: "author",
-  },
-  {
-    id: 3,
-    text: "Thank you! That was very helpful!",
-    userPhoto: specimen0,
-    date: "09 червня, 2020 | 09:20",
-    author: "other",
-  },
-];
-
-const Comment = ({ comment }) => {
-  const { text, userPhoto, date } = comment;
-  return (
-    <View
-      style={[
-        styles.wrapper,
-        comment.author === "author" && styles.wrapperAuthor,
-      ]}
-    >
-      <Image source={userPhoto} style={styles.ava} />
-      <View
-        style={[
-          styles.textWrapper,
-          comment.author !== "author"
-            ? { borderTopLeftRadius: 0 }
-            : { borderTopRightRadius: 0 },
-        ]}
-      >
-        <Text style={styles.comment}>{text}</Text>
-        <Text style={[styles.date, comment.id % 2 === 0]}>{date}</Text>
-      </View>
-    </View>
-  );
-};
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import {
+  selectAvatar,
+  selectEmail,
+  selectId,
+  selectLogin,
+} from "../redux/selectors";
+import { addComment } from "../firebase/firestore";
+import { useRoute } from "@react-navigation/native";
+import { Loader } from "../components/Loader";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/config";
 
 export const CommentsScreen = () => {
-  const [comment, setComment] = useState("");
-  const addComment = () => {
-    const newComment = {
-      id: Math.random(),
-      text: comment,
-      userPhoto: specimen,
-      date: Date(),
-      author: "author",
-    };
-    comments.push(newComment);
-    setComment("");
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const userId = useSelector(selectId);
+  const avatar = useSelector(selectAvatar);
+  const email = useSelector(selectEmail);
+  const login = useSelector(selectLogin);
+  const {
+    params: { postId, photo },
+  } = useRoute();
+
+  const fetchComments = async () => {
+    const commentsQuery = query(
+      collection(db, "posts", `${postId}`, "comments"),
+      orderBy("createdDate")
+    );
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      const updatedComments = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setComments(updatedComments);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   };
+
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
+  const formatDate = (date) => {
+    const dateToFormat = new Date(date);
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    const formattedDate = dateToFormat.toLocaleDateString("uk-UA", options);
+    const formattedTime = `${dateToFormat.getHours()}:${dateToFormat.getMinutes()}`;
+    return `${formattedDate} | ${formattedTime}`;
+  };
+
+  const addCommentUser = async () => {
+    try {
+      const today = Date.now();
+      const newComment = {
+        authorId: userId,
+        avatar,
+        email,
+        login,
+        commentText,
+        createdDate: formatDate(today),
+      };
+      await addComment(postId, newComment);
+      Keyboard.dismiss();
+      setCommentText("");
+    } catch (error) {
+      return;
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <FlatList
-        ListHeaderComponent={
-          <View style={styles.imageWrapper}>
-            <Image source={specimen1} style={styles.image} />
-          </View>
-        }
-        data={comments}
-        renderItem={({ item }) => <Comment comment={item} />}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-      />
-      <View>
-        <TextInput
-          placeholder="Коментувати..."
-          placeholderTextColor={"#BDBDBD"}
-          style={styles.input}
-          value={comment}
-          onChangeText={setComment}
+      {isLoading === true && <Loader />}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={100}
+        style={styles.mainWrapper}
+      >
+        <FlatList
+          data={comments}
+          style={{ gap: 24 }}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View style={styles.imageWrapper}>
+              <Image source={{ uri: photo }} style={styles.image} />
+            </View>
+          }
+          renderItem={({ item }) => (
+            <View
+              style={[
+                styles.comment,
+                item.authorId === userId
+                  ? styles.simgleCommentAuthor
+                  : styles.singleComment,
+              ]}
+            >
+              <Image
+                source={{ uri: item.avatar }}
+                style={styles.commentImage}
+              />
+              <View
+                style={[
+                  styles.commentWrapper,
+                  item.authorId === userId && styles.commentWrapperAuthor,
+                ]}
+              >
+                <Text style={styles.commentText}>{item.commentText}</Text>
+                <Text
+                  style={[
+                    styles.commentDate,
+                    item.authorId === userId && styles.commentDateAuthor,
+                  ]}
+                >
+                  {item.createdDate}
+                </Text>
+              </View>
+            </View>
+          )}
         />
-        <TouchableOpacity style={styles.button} onPress={addComment}>
-          <Feather name="arrow-up" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+        <View style={styles.form}>
+          <TextInput
+            placeholder="Коментувати..."
+            placeholderTextColor={"#BDBDBD"}
+            style={styles.input}
+            value={commentText}
+            onChangeText={setCommentText}
+          />
+          <TouchableOpacity style={styles.btnSend} onPress={addCommentUser}>
+            <Feather name="arrow-up" size={20} color={"#fff"} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -108,66 +154,92 @@ export const CommentsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFFFF",
+  },
+  mainWrapper: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingTop: 30,
+    backgroundColor: "#FFFFFF",
   },
   imageWrapper: {
-    paddingVertical: 32,
-  },
-  wrapper: {
-    flex: 1,
+    borderRadius: 8,
     width: "100%",
-    flexDirection: "row",
-    gap: 16,
-    marginBottom: 24,
-  },
-  wrapperAuthor: {
-    flexDirection: "row-reverse",
+    height: 240,
+    overflow: "hidden",
+    marginBottom: 32,
   },
   image: {
     width: "100%",
-    height: 240,
-    borderRadius: 8,
-  },
-  ava: {
-    width: 28,
-    height: 28,
-    borderRadius: 50,
-  },
-  textWrapper: {
-    flex: 1,
-    textAlign: "center",
-    backgroundColor: "#00000008",
-    padding: 16,
-    gap: 8,
-    borderRadius: 6,
+    height: "100%",
+    resizeMode: "cover",
   },
   comment: {
-    fontSize: 13,
+    gap: 16,
+    marginBottom: 24,
   },
-  date: {
-    fontSize: 10,
-    color: "#BDBDBD",
+  singleComment: {
+    flexDirection: "row",
   },
-
-  input: {
-    height: 50,
-    borderRadius: 100,
+  simgleCommentAuthor: {
+    flexDirection: "row-reverse",
+  },
+  commentImage: {
+    borderRadius: 50,
+    width: 28,
+    height: 28,
+    resizeMode: "cover",
+  },
+  commentWrapper: {
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    maxWidth: 300,
+    borderRadius: 6,
+    borderTopLeftRadius: 0,
     padding: 16,
-    borderColor: "#E8E8E8",
-    borderWidth: 1,
-    backgroundColor: "#f6f6f6",
-    marginTop: 10,
   },
-  button: {
+  commentWrapperAuthor: {
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 0,
+  },
+  commentText: {
+    color: "#212121",
+    fontSize: 13,
+    fontFamily: "Roboto-Regular",
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  commentDate: {
+    textAlign: "right",
+    color: "#BDBDBD",
+    fontSize: 10,
+    fontFamily: "Roboto-Regular",
+  },
+  commentDateAuthor: {
+    textAlign: "left",
+  },
+  input: {
+    backgroundColor: "#F6F6F6",
+    borderRadius: 100,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: "#F6F6F6",
+    height: 50,
+    padding: 16,
+    fontFamily: "Roboto-Medium",
+    fontSize: 16,
+  },
+  form: {
+    position: "relative",
+    marginVertical: 20,
+  },
+  btnSend: {
     position: "absolute",
+    backgroundColor: "#FF6C00",
+    borderRadius: 50,
     width: 34,
     height: 34,
-    borderRadius: 50,
-    backgroundColor: "#FF6C00",
+    top: 8,
     right: 8,
-    top: 18,
     justifyContent: "center",
     alignItems: "center",
   },

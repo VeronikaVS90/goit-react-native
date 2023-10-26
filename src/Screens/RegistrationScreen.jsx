@@ -17,27 +17,53 @@ import { InputEmail } from "../components/InputEmail";
 import { InputPassword } from "../components/InputPassword";
 import { Background } from "../components/Background";
 import { useNavigation } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import { useDispatch } from "react-redux";
+import { signUp } from "../redux/operations";
 
 export const RegistrationScreen = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [passwd, setPasswd] = useState("");
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const [focusedInput, setFocusedInput] = useState(null);
-  const [photo, setPhoto] = useState(null);
+  const [avatar, setAvatar] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const onSignUp = () => {
-    if (email === "" || passwd === "" || login === "") {
+    if (email === "" || passwd === "" || login === "" || !avatar) {
       return;
     }
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Home" }],
-    });
+    const newUser = { email, passwd, login, avatar };
+    try {
+      setIsLoading(true);
+      dispatch(signUp(newUser));
+    } catch (error) {
+      return;
+    } finally {
+      setIsLoading(false);
+    }
     setEmail("");
     setPasswd("");
     setLogin("");
+  };
+
+  const loadAvatar = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
+
+  const deleteAvatar = () => {
+    setAvatar(null);
   };
 
   return (
@@ -51,24 +77,29 @@ export const RegistrationScreen = () => {
           <Background>
             <View style={styles.wrapper}>
               <View style={styles.avatar}>
-                <Image source={photo} style={styles.imageAvatar} />
-                <TouchableOpacity
-                  style={[styles.icon, photo && styles.iconDelete]}
-                >
-                  {!photo ? (
+                {avatar && (
+                  <Image source={{ uri: avatar }} style={styles.imageAvatar} />
+                )}
+                {!avatar ? (
+                  <TouchableOpacity style={styles.icon} onPress={loadAvatar}>
                     <Ionicons
                       name="add-circle-outline"
                       size={25}
                       color={"#FF6C00"}
                     />
-                  ) : (
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.icon, avatar && styles.iconDelete]}
+                    onPress={deleteAvatar}
+                  >
                     <Ionicons
                       name="close-outline"
                       size={20}
                       color={"#BDBDBD"}
                     />
-                  )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
               </View>
               <Text style={styles.title}>Реєстрація</Text>
               <View style={styles.form}>
@@ -102,7 +133,11 @@ export const RegistrationScreen = () => {
                   focusedInput={focusedInput}
                 />
               </View>
-              <FormButton text={"Зареєструватися"} method={onSignUp} />
+              <FormButton
+                text={"Зареєструватися"}
+                method={onSignUp}
+                disabled={isLoading ? true : false}
+              />
               <Text
                 style={styles.link}
                 onPress={() => navigation.navigate("Login")}
