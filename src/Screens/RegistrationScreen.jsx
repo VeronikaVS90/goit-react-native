@@ -33,7 +33,7 @@ export const RegistrationScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const onSignUp = () => {
-    if (email === "" || passwd === "" || login === "" || !avatar) {
+    if (email === "" || passwd === "" || login === "") {
       return;
     }
     const newUser = { email, passwd, login, avatar };
