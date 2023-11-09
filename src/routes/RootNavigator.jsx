@@ -16,7 +16,7 @@ export const AuthStack = () => {
         <MainStack.Screen
           options={{ headerShown: false }}
           name="Home"
-          component={HomeBottomStack}
+          component={HomeBottomNavigator}
         />
       </MainStack.Navigator>
     );

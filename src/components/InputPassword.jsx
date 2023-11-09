@@ -14,6 +14,7 @@ export const InputPassword = ({
   onBlur,
   onFocus,
   focusedInput,
+  autoCapitalize,
 }) => {
   return (
     <View style={styles.loginContainer}>

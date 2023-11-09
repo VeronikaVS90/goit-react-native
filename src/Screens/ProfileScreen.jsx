@@ -59,7 +59,7 @@ export const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {iaLoading && <Loader />}
+      {isLoading && <Loader />}
       <Background>
         <FlatList
           ListHeaderComponent={

@@ -10,7 +10,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
 } from "react-native";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { FormButton } from "../components/FormButton";
 import { InputEmail } from "../components/InputEmail";
@@ -31,11 +31,45 @@ export const RegistrationScreen = () => {
   const [focusedInput, setFocusedInput] = useState(null);
   const [avatar, setAvatar] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const isEmailValid = (email) => {
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return emailPattern.test(email);
+  };
+
+  const isPasswordValid = (password) => {
+    return (
+      password.length >= 8 &&
+      /[a-z]/.test(password) &&
+      /[A-Z]/.test(password) &&
+      /\d/.test(password) &&
+      /[!@#$%^&*]/.test(password)
+    );
+  };
 
   const onSignUp = () => {
+    setEmailError("");
+    setPasswordError("");
+
     if (email === "" || passwd === "" || login === "") {
+      setEmailError("Введіть адресу електронної пошти, пароль та логін.");
       return;
     }
+
+    if (!isEmailValid(email)) {
+      setEmailError("Некоректна адреса електронної пошти");
+      return;
+    }
+
+    if (!isPasswordValid(passwd)) {
+      setPasswordError(
+        "Пароль повинен містити щонайменше 8 символів, включаючи великі та малі літери, цифри та символи."
+      );
+      return;
+    }
+
     const newUser = { email, passwd, login, avatar };
     try {
       setIsLoading(true);
@@ -116,22 +150,31 @@ export const RegistrationScreen = () => {
                   onFocus={() => setFocusedInput("login")}
                   onBlur={() => setFocusedInput(null)}
                 />
-                <InputEmail
-                  value={email}
-                  changeMethod={setEmail}
-                  onFocus={() => setFocusedInput("email")}
-                  onBlur={() => setFocusedInput(null)}
-                  focusedInput={focusedInput}
-                />
-                <InputPassword
-                  changeMethod={setPasswd}
-                  value={passwd}
-                  isPasswordHidden={isPasswordHidden}
-                  showPasswd={() => setIsPasswordHidden(!isPasswordHidden)}
-                  onFocus={() => setFocusedInput("password")}
-                  onBlur={() => setFocusedInput(null)}
-                  focusedInput={focusedInput}
-                />
+                {emailError ? (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                ) : (
+                  <InputEmail
+                    value={email}
+                    changeMethod={setEmail}
+                    onFocus={() => setFocusedInput("email")}
+                    onBlur={() => setFocusedInput(null)}
+                    focusedInput={focusedInput}
+                  />
+                )}
+                {passwordError ? (
+                  <Text style={styles.errorText}>{passwordError}</Text>
+                ) : (
+                  <InputPassword
+                    changeMethod={setPasswd}
+                    value={passwd}
+                    isPasswordHidden={isPasswordHidden}
+                    showPasswd={() => setIsPasswordHidden(!isPasswordHidden)}
+                    onFocus={() => setFocusedInput("password")}
+                    onBlur={() => setFocusedInput(null)}
+                    focusedInput={focusedInput}
+                    autoCapitalize="none"
+                  />
+                )}
               </View>
               <FormButton
                 text={"Зареєструватися"}
@@ -234,5 +277,10 @@ const styles = StyleSheet.create({
   blurBorder: {
     borderColor: "#FF6C00",
     backgroundColor: "#ffffff",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 8,
   },
 });
